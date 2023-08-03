@@ -32,4 +32,6 @@ RUN cd /tmp && \
     bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srscloud -y
 
 # Setup the safe path again, because the `--safe-path` does not work.
-RUN echo '/srscloud' > /www/server/panel/data/admin_path.pl
+# Enable the develop debug mode.
+RUN echo '/srscloud' > /www/server/panel/data/admin_path.pl && \
+    echo 'True' > /www/server/panel/data/debug.pl
