@@ -27,12 +27,14 @@ python test.py
 #setup path: /www/server
 ```
 
-Link srs-cloud and develop it:
+Now you are able to develop the `example` plugin, or link srs-cloud and develop it:
 
 ```bash
 ln -sf ~/git/srs-cloud/scripts/setup-bt
 ln -sf ~/git/srs-cloud/scripts/setup-aapanel
 ```
+
+Then, run BT docker and mount the plugin to the container.
 
 ## Docker
 
