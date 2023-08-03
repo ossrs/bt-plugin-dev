@@ -26,10 +26,15 @@ RUN apt-get install -y fonts-lato javascript-common libjs-jquery libruby2.7 liby
 # See https://www.bt.cn/
 # Note: We use very simple user `ossrs` and password `12345678` for local development environment, you should change it in production environment.
 # Note: We disable the HTTPS by sed `SET_SSL=false` in install.sh.
+# Note: We remove the plugin oneav and webssh, which is not necessary.
 RUN cd /tmp && \
     wget -O install.sh https://download.bt.cn/install/install-ubuntu_6.0.sh && \
     sed -i 's/SET_SSL=true/SET_SSL=false/g' install.sh && \
-    bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srscloud -y
+    bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srscloud -y && \
+    echo "Remove the BT plugin oneav, a security tool." && \
+    bash /www/server/panel/plugin/oneav/install.sh uninstall && \
+    echo "Remove the BT plugin webssh, a SSH tool." && \
+    bash /www/server/panel/plugin/webssh/install.sh uninstall
 
 # Setup the safe path again, because the `--safe-path` does not work.
 # Enable the develop debug mode.
