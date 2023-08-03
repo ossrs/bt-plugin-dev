@@ -161,3 +161,7 @@ cython_debug/
 
 /setup-bt
 /setup-aapanel
+/www/server/panel/pyenv
+/www/server/panel/plugin
+/www/server/panel/cache
+

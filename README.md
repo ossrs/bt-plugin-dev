@@ -38,22 +38,16 @@ Then, run BT docker and mount the plugin to the container.
 
 ## Docker
 
-Build a docker image:
-
-```bash
-docker rm -f bt 2>/dev/null || echo 'OK' &&
-docker rmi bt 2>/dev/null || echo 'OK' &&
-docker build --progress plain -t bt -f Dockerfile .
-```
-
 Create a docker container in daemon:
 
 ```bash
 docker rm -f bt 2>/dev/null || echo 'OK' &&
 docker run -p 7800:7800 -v $(pwd)/example:/www/server/panel/plugin/example \
     --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host \
-    -d --rm -it -v $(pwd):/g -w /g --name=bt bt
+    -d --rm -it -v $(pwd):/g -w /g --name=bt ossrs/bt-plugin-dev:1
 ```
+
+> Note: For user in China, you can use `registry.cn-hangzhou.aliyuncs.com/ossrs/bt-plugin-dev:1` instead.
 
 Open [http://localhost:7800/srscloud](http://localhost:7800/srscloud) and login:
 
@@ -64,3 +58,32 @@ Open [http://localhost:7800/srscloud](http://localhost:7800/srscloud) and login:
 
 Register a BT account and bind to the container, in the application store, there is a example plugin.
 
+## Update Library
+
+Build a image from the latest BT:
+
+```bash
+docker build --progress=plain -f Dockerfile -t bt .
+```
+
+Copy the `/www/server` from the docker:
+
+```bash
+docker run --rm -it -v $(pwd):/g -w /g --name=update bt top
+```
+
+Then, copy the `/www/server` to the host:
+
+```bash
+rm -rf www && mkdir www &&
+docker exec -it update cp -rf /www/server /g/www/
+```
+
+Update the permission of files:
+
+```bash
+for ((i=0;i<8;i++)); do find www -type d |xargs chmod 755; done &&
+find www -type f |xargs chmod u+rw &&
+find www -type f |xargs chmod g+r &&
+find www -type f |xargs chmod o+r
+```
