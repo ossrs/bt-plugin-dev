@@ -16,10 +16,9 @@ FROM ${ARCH}jrei/systemd-ubuntu:focal AS dist
 ENV DEBIAN_FRONTEND=noninteractive
 
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#apt-get
-RUN apt update -y && apt-get install -y docker.io make gdb gcc g++ wget vim tree python3 python3-venv
-
-# Preinstall for BT panel.
-RUN apt-get install -y fonts-lato javascript-common libjs-jquery libruby2.7 libyaml-0-2 rake \
+# Note that we install docker.io because we don't use the docker plugin.
+RUN apt update -y && apt-get install -y docker.io make gdb gcc g++ wget vim tree python3 python3-venv \
+    fonts-lato javascript-common libjs-jquery libruby2.7 libyaml-0-2 rake \
     ruby ruby-minitest ruby-net-telnet ruby-power-assert ruby-test-unit ruby-xmlrpc \
     ruby2.7 rubygems-integration unzip zip libcurl4
 
