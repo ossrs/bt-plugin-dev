@@ -15,6 +15,10 @@ FROM ${ARCH}jrei/systemd-ubuntu:focal AS dist
 # https://serverfault.com/questions/949991/how-to-install-tzdata-on-a-ubuntu-docker-image
 ENV DEBIAN_FRONTEND=noninteractive
 
+# To use if in RUN, see https://github.com/moby/moby/issues/7281#issuecomment-389440503
+# Note that only exists issue like "/bin/sh: 1: [[: not found" for Ubuntu20, no such problem in CentOS7.
+SHELL ["/bin/bash", "-c"]
+
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#apt-get
 # Note that we install docker.io because we don't use the docker plugin.
 RUN apt update -y && apt-get install -y docker.io make gdb gcc g++ wget vim tree python3 python3-venv \
@@ -33,7 +37,9 @@ RUN cd /tmp && \
     echo "Remove the BT plugin oneav, a security tool." && \
     if [[ -f /www/server/panel/plugin/oneav/oneav.bundle ]]; then curl -sSL https://download.bt.cn/install/plugin/oneav/install.sh |bash -s -- uninstall; fi && \
     echo "Remove the BT plugin webssh, a SSH tool." && \
-    if [[ -f /www/server/panel/plugin/webssh/install.sh ]]; then bash /www/server/panel/plugin/webssh/install.sh uninstall; fi
+    if [[ -f /www/server/panel/plugin/webssh/install.sh ]]; then bash /www/server/panel/plugin/webssh/install.sh uninstall; fi && \
+    echo "Install NGINX for BT." && \
+    curl -sSL https://download.bt.cn/install/4/nginx.sh |bash -s -- install 1.22
 
 # Setup the safe path again, because the `--safe-path` does not work.
 # Enable the develop debug mode.
