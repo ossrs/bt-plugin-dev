@@ -24,7 +24,7 @@ SHELL ["/bin/bash", "-c"]
 RUN apt update -y && apt-get install -y docker.io make gdb gcc g++ wget vim tree python3 python3-venv \
     fonts-lato javascript-common libjs-jquery libruby2.7 libyaml-0-2 rake \
     ruby ruby-minitest ruby-net-telnet ruby-power-assert ruby-test-unit ruby-xmlrpc \
-    ruby2.7 rubygems-integration unzip zip libcurl4
+    ruby2.7 rubygems-integration unzip zip libcurl4 cmake libxslt-dev
 
 # See https://www.bt.cn/
 # Note: We use very simple user `ossrs` and password `12345678` for local development environment, you should change it in production environment.
@@ -46,4 +46,5 @@ RUN echo "Remove the BT plugin oneav, a security tool." && \
     echo "Remove the BT plugin webssh, a SSH tool." && \
     if [[ -f /www/server/panel/plugin/webssh/install.sh ]]; then bash /www/server/panel/plugin/webssh/install.sh uninstall; fi && \
     echo "Install NGINX for BT." && \
+    curl -sSL https://download.bt.cn/install/4/lib.sh |bash -s -- && \
     curl -sSL https://download.bt.cn/install/4/nginx.sh |bash -s -- install 1.22
