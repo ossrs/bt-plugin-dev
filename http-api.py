@@ -1,5 +1,5 @@
 #coding: utf-8
-import os, time,hashlib,json,urllib.request
+import os,time,hashlib,json,urllib.request
 md5sum = lambda s: hashlib.md5(s.encode('utf-8')).hexdigest()
 
 # See https://www.bt.cn/bbs/thread-20376-1-1.html
