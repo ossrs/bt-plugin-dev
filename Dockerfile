@@ -29,19 +29,21 @@ RUN apt update -y && apt-get install -y docker.io make gdb gcc g++ wget vim tree
 # See https://www.bt.cn/
 # Note: We use very simple user `ossrs` and password `12345678` for local development environment, you should change it in production environment.
 # Note: We disable the HTTPS by sed `SET_SSL=false` in install.sh.
-# Note: We remove the plugin oneav and webssh, which is not necessary.
 RUN cd /tmp && \
     wget -O install.sh https://download.bt.cn/install/install-ubuntu_6.0.sh && \
     sed -i 's/SET_SSL=true/SET_SSL=false/g' install.sh && \
-    bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srscloud -y && \
-    echo "Remove the BT plugin oneav, a security tool." && \
-    if [[ -f /www/server/panel/plugin/oneav/oneav.bundle ]]; then curl -sSL https://download.bt.cn/install/plugin/oneav/install.sh |bash -s -- uninstall; fi && \
-    echo "Remove the BT plugin webssh, a SSH tool." && \
-    if [[ -f /www/server/panel/plugin/webssh/install.sh ]]; then bash /www/server/panel/plugin/webssh/install.sh uninstall; fi && \
-    echo "Install NGINX for BT." && \
-    curl -sSL https://download.bt.cn/install/4/nginx.sh |bash -s -- install 1.22
+    bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srscloud -y
 
 # Setup the safe path again, because the `--safe-path` does not work.
 # Enable the develop debug mode.
 RUN echo '/srscloud' > /www/server/panel/data/admin_path.pl && \
     echo 'True' > /www/server/panel/data/debug.pl
+
+# Note: We remove the plugin oneav and webssh, which is not necessary.
+# Note: We install nginx 1.22 by default.
+RUN echo "Remove the BT plugin oneav, a security tool." && \
+    if [[ -f /www/server/panel/plugin/oneav/oneav.bundle ]]; then curl -sSL https://download.bt.cn/install/plugin/oneav/install.sh |bash -s -- uninstall; fi && \
+    echo "Remove the BT plugin webssh, a SSH tool." && \
+    if [[ -f /www/server/panel/plugin/webssh/install.sh ]]; then bash /www/server/panel/plugin/webssh/install.sh uninstall; fi && \
+    echo "Install NGINX for BT." && \
+    curl -sSL https://download.bt.cn/install/4/nginx.sh |bash -s -- install 1.22
