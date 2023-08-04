@@ -40,7 +40,9 @@ RUN echo '/srscloud' > /www/server/panel/data/admin_path.pl && \
     echo 'True' > /www/server/panel/data/debug.pl
 
 # Note: We remove the plugin oneav and webssh, which is not necessary.
-# Note: We install nginx 1.22 by default.
+# Note: We install nginx 1.22 by default, like:
+#       http://localhost:7800/plugin?action=install_plugin
+#       sName=nginx&version=1.22&min_version=1&type=1
 RUN echo "Remove the BT plugin oneav, a security tool." && \
     if [[ -f /www/server/panel/plugin/oneav/oneav.bundle ]]; then curl -sSL https://download.bt.cn/install/plugin/oneav/install.sh |bash -s -- uninstall; fi && \
     echo "Remove the BT plugin webssh, a SSH tool." && \
