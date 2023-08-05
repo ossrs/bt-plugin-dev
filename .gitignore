@@ -164,4 +164,4 @@ cython_debug/
 /www/server/panel/pyenv
 /www/server/panel/plugin
 /www/server/panel/cache
-
+/tools

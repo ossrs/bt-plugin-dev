@@ -1,3 +1,8 @@
+ARG ARCH
+
+FROM ${ARCH}ossrs/node:18 AS node
+FROM ${ARCH}ossrs/srs:ubuntu20 AS go
+
 # Usage:
 # Build image:
 #     docker build -t test .
@@ -11,6 +16,13 @@
 #FROM ubuntu:focal
 # See https://hub.docker.com/r/jrei/systemd-ubuntu/tags
 FROM ${ARCH}jrei/systemd-ubuntu:focal AS dist
+
+# Copy nodejs for ui build.
+COPY --from=node /usr/local/bin /usr/local/bin
+COPY --from=node /usr/local/lib /usr/local/lib
+# For build platform in docker.
+COPY --from=go /usr/local/go /usr/local/go
+ENV PATH=$PATH:/usr/local/go/bin
 
 # https://serverfault.com/questions/949991/how-to-install-tzdata-on-a-ubuntu-docker-image
 ENV DEBIAN_FRONTEND=noninteractive
