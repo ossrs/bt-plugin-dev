@@ -33,7 +33,8 @@ SHELL ["/bin/bash", "-c"]
 
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#apt-get
 # Note that we install docker.io because we don't use the docker plugin.
-RUN apt update -y && apt-get install -y docker.io make gdb gcc g++ wget vim tree python3 python3-venv \
+RUN apt update -y && apt-get install -y docker.io make \
+    ffmpeg gdb gcc g++ wget vim tree python3 python3-venv \
     fonts-lato javascript-common libjs-jquery libruby2.7 libyaml-0-2 rake \
     ruby ruby-minitest ruby-net-telnet ruby-power-assert ruby-test-unit ruby-xmlrpc \
     ruby2.7 rubygems-integration unzip zip libcurl4 cmake libxslt-dev
