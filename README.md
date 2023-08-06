@@ -82,8 +82,9 @@ docker exec -it update cp -rf /www/server /g/www/
 Update the permission of files:
 
 ```bash
-for ((i=0;i<8;i++)); do find www -type d |xargs chmod 755; done &&
-find www -type f |xargs chmod u+rw &&
-find www -type f |xargs chmod g+r &&
-find www -type f |xargs chmod o+r
+for ((i=0;i<8;i++)); do find www -type d -exec chmod 755 "{}" \; ; done &&
+find www -type f -exec chmod u+rw "{}" \; &&
+find www -type f -exec chmod g+r "{}" \; &&
+find www -type f -exec chmod o+r "{}" \; &&
+echo OK
 ```

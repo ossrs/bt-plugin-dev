@@ -34,7 +34,7 @@ SHELL ["/bin/bash", "-c"]
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#apt-get
 # Note that we install docker.io because we don't use the docker plugin.
 RUN apt update -y && apt-get install -y docker.io make \
-    ffmpeg gdb gcc g++ wget vim tree python3 python3-venv \
+    curl ffmpeg gdb gcc g++ wget vim tree python3 python3-venv \
     fonts-lato javascript-common libjs-jquery libruby2.7 libyaml-0-2 rake \
     ruby ruby-minitest ruby-net-telnet ruby-power-assert ruby-test-unit ruby-xmlrpc \
     ruby2.7 rubygems-integration unzip zip libcurl4 cmake libxslt-dev
@@ -47,8 +47,7 @@ RUN cd /tmp && \
     sed -i 's/SET_SSL=true/SET_SSL=false/g' install.sh && \
     bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srscloud -y
 
-# Setup the safe path again, because the `--safe-path` does not work.
-# Enable the develop debug mode.
+# Enable the develop debug mode and reset some params.
 RUN echo '/srscloud' > /www/server/panel/data/admin_path.pl && \
     echo 'True' > /www/server/panel/data/debug.pl
 
@@ -56,7 +55,8 @@ RUN echo '/srscloud' > /www/server/panel/data/admin_path.pl && \
 # Note: We install nginx 1.22 by default, like:
 #       http://localhost:7800/plugin?action=install_plugin
 #       sName=nginx&version=1.22&min_version=1&type=1
-RUN echo "Remove the BT plugin oneav, a security tool." && \
+RUN cd /tmp && \
+    echo "Remove the BT plugin oneav, a security tool." && \
     if [[ -f /www/server/panel/plugin/oneav/oneav.bundle ]]; then curl -sSL https://download.bt.cn/install/plugin/oneav/install.sh |bash -s -- uninstall; fi && \
     echo "Remove the BT plugin webssh, a SSH tool." && \
     if [[ -f /www/server/panel/plugin/webssh/install.sh ]]; then bash /www/server/panel/plugin/webssh/install.sh uninstall; fi && \
