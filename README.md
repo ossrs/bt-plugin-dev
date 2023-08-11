@@ -49,7 +49,7 @@ docker run -p 7800:7800 -v $(pwd)/example:/www/server/panel/plugin/example \
 
 > Note: For user in China, you can use `registry.cn-hangzhou.aliyuncs.com/ossrs/bt-plugin-dev:1` instead.
 
-Open [http://localhost:7800/srscloud](http://localhost:7800/srscloud) and login:
+Open [http://localhost:7800/srsstack](http://localhost:7800/srsstack) and login:
 
 * Username: `ossrs`
 * Password: `12345678`

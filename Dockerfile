@@ -45,10 +45,10 @@ RUN apt update -y && apt-get install -y docker.io make \
 RUN cd /tmp && \
     wget -O install.sh https://download.bt.cn/install/install-ubuntu_6.0.sh && \
     sed -i 's/SET_SSL=true/SET_SSL=false/g' install.sh && \
-    bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srscloud -y
+    bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srsstack -y
 
 # Enable the develop debug mode and reset some params.
-RUN echo '/srscloud' > /www/server/panel/data/admin_path.pl && \
+RUN echo '/srsstack' > /www/server/panel/data/admin_path.pl && \
     echo 'True' > /www/server/panel/data/debug.pl
 
 # Note: We remove the plugin oneav and webssh, which is not necessary.
