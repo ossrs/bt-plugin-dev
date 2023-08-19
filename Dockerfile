@@ -2,6 +2,7 @@ ARG ARCH
 
 FROM ${ARCH}ossrs/node:18 AS node
 FROM ${ARCH}ossrs/srs:ubuntu20 AS go
+FROM ${ARCH}ossrs/srs:tools AS tools
 
 # Usage:
 # Build image:
@@ -20,6 +21,8 @@ FROM ${ARCH}jrei/systemd-ubuntu:focal AS dist
 # Copy nodejs for ui build.
 COPY --from=node /usr/local/bin /usr/local/bin
 COPY --from=node /usr/local/lib /usr/local/lib
+# Copy FFmpeg for tests.
+COPY --from=tools /usr/local/bin/ffmpeg /usr/local/bin/ffprobe /usr/local/bin/
 # For build platform in docker.
 COPY --from=go /usr/local/go /usr/local/go
 ENV PATH=$PATH:/usr/local/go/bin
@@ -34,7 +37,7 @@ SHELL ["/bin/bash", "-c"]
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#apt-get
 # Note that we install docker.io because we don't use the docker plugin.
 RUN apt update -y && apt-get install -y docker.io make \
-    curl ffmpeg gdb gcc g++ wget vim tree python3 python3-venv \
+    curl gdb gcc g++ wget vim tree python3 python3-venv \
     fonts-lato javascript-common libjs-jquery libruby2.7 libyaml-0-2 rake \
     ruby ruby-minitest ruby-net-telnet ruby-power-assert ruby-test-unit ruby-xmlrpc \
     ruby2.7 rubygems-integration unzip zip libcurl4 cmake libxslt-dev
