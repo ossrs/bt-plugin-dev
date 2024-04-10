@@ -31,6 +31,11 @@ if [ "${UbuntuCheck}" ] && [ "${UbuntuCheck}" -lt "16" ];then
 	echo "Ubuntu ${UbuntuCheck}不支持安装宝塔面板，建议更换Ubuntu18/20安装宝塔面板"
 	exit 1
 fi
+HOSTNAME_CHECK=$(cat /etc/hostname)
+if [ -z "${HOSTNAME_CHECK}" ];then
+	echo "当前主机名hostname为空无法安装宝塔面板，请咨询服务器运营商设置好hostname后再重新安装"
+	exit 1
+fi
 
 cd ~
 setup_path="/www"
@@ -113,6 +118,9 @@ System_Check(){
 }
 Set_Ssl(){
     SET_SSL=true
+    if [ "${SSL_PL}" ];then
+    	SET_SSL=""
+    fi
 }
 Get_Pack_Manager(){
 	if [ -f "/usr/bin/yum" ] && [ -d "/etc/yum.repos.d" ]; then
@@ -336,6 +344,7 @@ Install_RPM_Pack(){
 Install_Deb_Pack(){
 	ln -sf bash /bin/sh
 	UBUNTU_22=$(cat /etc/issue|grep "Ubuntu 22")
+	DEBIAN_12=$(cat /etc/issue|grep Debian|grep 12)
 	if [ "${UBUNTU_22}" ];then
 		apt-get remove needrestart -y
 	fi
@@ -367,16 +376,19 @@ Install_Deb_Pack(){
 		apt-get install curl -y
 	fi
 
-	debPacks="wget curl libcurl4-openssl-dev gcc make zip unzip tar openssl libssl-dev gcc libxml2 libxml2-dev zlib1g zlib1g-dev libjpeg-dev libpng-dev lsof libpcre3 libpcre3-dev cron net-tools swig build-essential libffi-dev libbz2-dev libncurses-dev libsqlite3-dev libreadline-dev tk-dev libgdbm-dev libdb-dev libdb++-dev libpcap-dev xz-utils git qrencode";
+	debPacks="wget curl libcurl4-openssl-dev gcc make zip unzip tar openssl libssl-dev gcc libxml2 libxml2-dev zlib1g zlib1g-dev libjpeg-dev libpng-dev lsof libpcre3 libpcre3-dev cron net-tools swig build-essential libffi-dev libbz2-dev libncurses-dev libsqlite3-dev libreadline-dev tk-dev libgdbm-dev libdb-dev libdb++-dev libpcap-dev xz-utils git qrencode sqlite3 ufw";
 	apt-get install -y $debPacks --force-yes
 
-	for debPack in ${debPacks}
-	do
-		packCheck=$(dpkg -l|grep ${debPack})
-		if [ "$?" -ne "0" ] ;then
-			apt-get install -y $debPack
-		fi
-	done
+
+    if [ -z "${UBUNTU_22}" ] || [ "${DEBIAN_12}" ];then
+    	for debPack in ${debPacks}
+    	do
+    		packCheck=$(dpkg -l|grep ${debPack})
+    		if [ "$?" -ne "0" ] ;then
+    			apt-get install -y $debPack
+    		fi
+    	done
+    fi
 
 	if [ ! -d '/etc/letsencrypt' ];then
 		mkdir -p /etc/letsencryp
@@ -390,12 +402,34 @@ Install_Deb_Pack(){
 Get_Versions(){
 	redhat_version_file="/etc/redhat-release"
 	deb_version_file="/etc/issue"
+
+	if [[ $(grep Anolis /etc/os-release) ]] && [[ $(grep VERSION /etc/os-release|grep 8.8) ]];then
+		if [ -f "/usr/bin/yum" ];then
+			os_type="anolis"
+			os_version="8"
+			return
+		fi
+	fi
+
 	if [ -f $redhat_version_file ];then
 		os_type='el'
 		is_aliyunos=$(cat $redhat_version_file|grep Aliyun)
 		if [ "$is_aliyunos" != "" ];then
 			return
 		fi
+
+		if [[ $(grep "Alibaba Cloud" /etc/redhat-release) ]] && [[ $(grep al8 /etc/os-release) ]];then
+			os_type="ali-linux-"
+			os_version="al8"
+			return
+		fi
+
+		if [[ $(grep "TencentOS Server" /etc/redhat-release|grep 3.1) ]];then
+			os_type="TencentOS-"
+			os_version="3.1"
+			return
+		fi
+
 		os_version=$(cat $redhat_version_file|grep CentOS|grep -Eo '([0-9]+\.)+[0-9]+'|grep -Eo '^[0-9]')
 		if [ "${os_version}" = "5" ];then
 			os_version=""
@@ -658,6 +692,11 @@ Install_Bt(){
 		mv -f ${setup_path}/server/panel/data/system.db ${setup_path}/server/panel/old_data/system.db
 		mv -f ${setup_path}/server/panel/data/port.pl ${setup_path}/server/panel/old_data/port.pl
 		mv -f ${setup_path}/server/panel/data/admin_path.pl ${setup_path}/server/panel/old_data/admin_path.pl
+		
+		if [ -d "${setup_path}/server/panel/data/db" ];then
+			\cp -r ${setup_path}/server/panel/data/db ${setup_path}/server/panel/old_data/
+		fi
+		
 	fi
 
 	if [ ! -f "/usr/bin/unzip" ]; then
@@ -676,6 +715,11 @@ Install_Bt(){
 		mv -f ${setup_path}/server/panel/old_data/system.db ${setup_path}/server/panel/data/system.db
 		mv -f ${setup_path}/server/panel/old_data/port.pl ${setup_path}/server/panel/data/port.pl
 		mv -f ${setup_path}/server/panel/old_data/admin_path.pl ${setup_path}/server/panel/data/admin_path.pl
+		
+		if [ -d "${setup_path}/server/panel/old_data/db" ];then
+			\cp -r ${setup_path}/server/panel/old_data/db ${setup_path}/server/panel/data/
+		fi
+		
 		if [ -d "/${setup_path}/server/panel/old_data" ];then
 			rm -rf ${setup_path}/server/panel/old_data
 		fi
@@ -689,6 +733,11 @@ Install_Bt(){
 	rm -f panel.zip
 	rm -f ${setup_path}/server/panel/class/*.pyc
 	rm -f ${setup_path}/server/panel/*.pyc
+
+    SYS_LOG_CHECK=$(grep ^weekly /etc/logrotate.conf)
+    if [ "${SYS_LOG_CHECK}" ];then
+        sed -i 's/rotate [0-9]*/rotate 8/g' /etc/logrotate.conf 
+    fi
 
 	chmod +x /etc/init.d/bt
 	chmod -R 600 ${setup_path}/server/panel
@@ -721,28 +770,31 @@ Set_Bt_Panel(){
 	fi
 	sleep 1
 	admin_auth="/www/server/panel/data/admin_path.pl"
-	if [ "${SAFE_PATH}" ];then
-		auth_path=$SAFE_PATH
-		echo "/${auth_path}" > ${admin_auth}
-	fi
 	if [ ! -f ${admin_auth} ];then
 		auth_path=$(cat /dev/urandom | head -n 16 | md5sum | head -c 8)
 		echo "/${auth_path}" > ${admin_auth}
 	fi
-	auth_path=$(cat /dev/urandom | head -n 16 | md5sum | head -c 8)
-	echo "/${auth_path}" > ${admin_auth}
+	if [ "${SAFE_PATH}" ];then
+		auth_path=$SAFE_PATH
+		echo "/${auth_path}" > ${admin_auth}
+	fi
 	chmod -R 700 $pyenv_path/pyenv/bin
-	/www/server/panel/pyenv/bin/pip3 install pymongo
-	/www/server/panel/pyenv/bin/pip3 install psycopg2-binary
-	/www/server/panel/pyenv/bin/pip3 install flask -U
-	/www/server/panel/pyenv/bin/pip3 install flask-sock
-	btpip install simple-websocket==0.10.0
+	if [ ! -f "/www/server/panel/pyenv/n.pl" ];then
+    	btpip install docxtpl==0.16.7
+    	/www/server/panel/pyenv/bin/pip3 install pymongo
+    	/www/server/panel/pyenv/bin/pip3 install psycopg2-binary
+    	/www/server/panel/pyenv/bin/pip3 install flask -U
+    	/www/server/panel/pyenv/bin/pip3 install flask-sock
+    	/www/server/panel/pyenv/bin/pip3 install -I gevent
+    	btpip install simple-websocket==0.10.0
+    	btpip install natsort
+    	btpip uninstall enum34 -y
+    	btpip install geoip2==4.7.0
+    	btpip install brotli
+    fi
+    btpip install PyMySQL
 	auth_path=$(cat ${admin_auth})
 	cd ${setup_path}/server/panel/
-	if [ "$SET_SSL" == true ]; then
-        btpip install -I pyOpenSSl
-        btpython /www/server/panel/tools.py ssl
-    fi
 	/etc/init.d/bt start
 	$python_bin -m py_compile tools.py
 	$python_bin tools.py username
@@ -754,6 +806,12 @@ Set_Bt_Panel(){
 	echo "${password}" > ${setup_path}/server/panel/default.pl
 	chmod 600 ${setup_path}/server/panel/default.pl
 	sleep 3
+	if [ "$SET_SSL" == true ]; then
+	    if [ ! -f "/www/server/panel/pyenv/n.pl" ];then
+            btpip install -I pyOpenSSl 2>/dev/null
+        fi
+        btpython /www/server/panel/tools.py ssl
+    fi
 	/etc/init.d/bt restart 	
 	sleep 3
 	isStart=$(ps aux |grep 'BT-Panel'|grep -v grep|awk '{print $2}')
@@ -766,20 +824,22 @@ Set_Bt_Panel(){
 		lsattr python3.7 python
 		Red_Error "ERROR: The BT-Panel service startup failed." "ERROR: 宝塔启动失败"
 	fi
-	wget -O oneav_bt.sh https://download.bt.cn/install/plugin/oneav/install.sh > /dev/null 2>&1
-	bash oneav_bt.sh install > /www/server/panel/install//btinstall.log 2>&1
-	rm -f oneav_bt.sh
+# 	wget -O oneav_bt.sh https://download.bt.cn/install/plugin/oneav/install.sh > /dev/null 2>&1
+# 	bash oneav_bt.sh install > /www/server/panel/install//btinstall.log 2>&1
+# 	rm -f oneav_bt.sh
 
 	if [ "$PANEL_USER" ];then
 		cd ${setup_path}/server/panel/
 		btpython -c 'import tools;tools.set_panel_username("'$PANEL_USER'")'
 		cd ~
 	fi
+	if [ -f "/usr/bin/sqlite3" ] ;then
+	    sqlite3 /www/server/panel/data/db/panel.db "UPDATE config SET status = '1' WHERE id = '1';"  > /dev/null 2>&1
+    fi
 }
 Set_Firewall(){
 	sshPort=$(cat /etc/ssh/sshd_config | grep 'Port '|awk '{print $2}')
 	if [ "${PM}" = "apt-get" ]; then
-		apt-get install -y ufw
 		if [ -f "/usr/sbin/ufw" ];then
 			ufw allow 20/tcp
 			ufw allow 21/tcp
@@ -850,6 +910,11 @@ Get_Ip_Address(){
 				sed -i "/bt.cn/d" /etc/hosts
 			fi
 		fi
+	fi
+	
+	CN_CHECK=$(curl -sS --connect-timeout 10 -m 10 https://api.bt.cn/api/isCN)
+	if [ "${CN_CHECK}" == "True" ];then
+        echo "True" > /www/server/panel/data/domestic_ip.pl
 	fi
 
 	ipv4Check=$($python_bin -c "import re; print(re.match('^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$','${getIpAddress}'))")
@@ -940,6 +1005,9 @@ while [ ${#} -gt 0 ]; do
 			SAFE_PATH=$2
 			shift 1
 			;;
+		--ssl-disable)
+			SSL_PL="disable"
+			;;
 		-y)
 			go="y"
 			;;
@@ -992,9 +1060,19 @@ echo -e " 点击【高级】-【继续访问】或【接受风险并继续】访
 echo -e " 教程：https://www.bt.cn/bbs/thread-117246-1-1.html"
 echo -e "" 
 echo -e "=================================================================="
+echo -e ""
+echo -e " 浏览器访问以下链接，添加宝塔客服"
+echo -e " https://www.bt.cn/new/wechat_customer"
+echo -e ""
+echo -e "=================================================================="
 endTime=`date +%s`
 ((outTime=($endTime-$startTime)/60))
-echo -e "Time consumed:\033[32m $outTime \033[0mMinute!"
+if [ "${outTime}" == "0" ];then
+	((outTime=($endTime-$startTime)))
+	echo -e "Time consumed:\033[32m $outTime \033[0mseconds!"
+else
+	echo -e "Time consumed:\033[32m $outTime \033[0mMinute!"
+fi
 
 
 

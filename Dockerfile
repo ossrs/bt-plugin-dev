@@ -63,10 +63,12 @@ RUN apt-get install -y libssl-dev xterm dpkg-dev gnupg gpg libfreetype-dev libfr
 # See https://www.bt.cn/
 # Note: We use very simple user `ossrs` and password `12345678` for local development environment, you should change it in production environment.
 # Note: We disable the HTTPS by sed `SET_SSL=false` in install.sh.
+# You can also set the user and password as:
+#    cd /www/server/panel && btpython -c 'import tools;tools.set_panel_username("ossrs")'
+#    cd /www/server/panel && btpython -c 'import tools;tools.set_panel_pwd("12345678")'
 RUN cd /tmp && \
-    wget -O install.sh https://download.bt.cn/install/install-ubuntu_6.0.sh && \
-    sed -i 's/SET_SSL=true/SET_SSL=false/g' install.sh && \
-    bash install.sh ed8484bec --user ossrs --password 12345678 --port 7800 --safe-path /srsstack -y
+    curl -o install.sh -sSL https://download.bt.cn/install/install-ubuntu_6.0.sh && \
+    bash install.sh --port 7800 --user ossrs --password 12345678 --safe-path /srsstack -y --ssl-disable ed8484bec
 
 # Enable the develop debug mode and reset some params.
 RUN echo '/srsstack' > /www/server/panel/data/admin_path.pl && \
